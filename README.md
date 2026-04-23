@@ -1,4 +1,4 @@
-# 🍯 Cloud Honeypot — T-Pot on AWS EC2
+# Cloud Honeypot — T-Pot on AWS EC2
 
 A public-facing honeypot deployed on AWS to capture and analyze real-world cyberattacks. Within 24 hours of deployment, the honeypot recorded **60,000+ attack attempts** from across the globe, providing hands-on exposure to real attacker tactics, techniques, and procedures (TTPs).
 
