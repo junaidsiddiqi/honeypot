@@ -1,14 +1,27 @@
-# Cloud Honeypot — T-Pot on AWS EC2
+# Cloud Honeypot — T-Pot on Vultr
 
-A public-facing honeypot deployed on AWS to capture and analyze real-world cyberattacks. Within 24 hours of deployment, the honeypot recorded **60,000+ attack attempts** from across the globe, providing hands-on exposure to real attacker tactics, techniques, and procedures (TTPs).
+A public-facing honeypot deployed on a cloud server and exposed to the open internet to capture and analyze real-world cyberattacks. Over 30 days of operation, the honeypot recorded **2 million+ attack attempts** from threat actors across the globe, providing hands-on exposure to real attacker tactics, techniques, and procedures (TTPs).
 
 ---
 
 ## Overview
 
-This project involved deploying T-Pot — a multi-honeypot platform — on a cloud-based Ubuntu server exposed to the public internet. The goal was to observe how attackers behave in the wild: what credentials they try, what ports they target, what tools they use, and where they originate from.
+This project involved deploying T-Pot — a multi-honeypot platform — on a cloud-based Ubuntu server with no firewall restrictions, intentionally exposed to the public internet. The goal was to observe how attackers behave in the wild: what credentials they try, what ports they target, what tools they use, what vulnerabilities they exploit, and where they originate from.
 
-T-Pot bundles multiple honeypot services (Cowrie, Dionaea, Sentrypeer, ConPot, and more) alongside an ELK stack (Elasticsearch + Kibana) for real-time log ingestion, visualization, and analysis, as well as Suricata for IDS alerting.
+T-Pot bundles multiple honeypot services alongside an ELK stack (Elasticsearch + Kibana) for real-time log ingestion and visualization, as well as Suricata IDS for intrusion detection and alert categorization.
+
+> <img width="1916" height="943" alt="image" src="https://github.com/user-attachments/assets/60339425-f5f7-41da-9021-4972724ba9ae" />
+
+---
+
+## Setup
+
+1. Deployed **Ubuntu 24.04 LTS** on a Vultr cloud instance
+2. Cloned the T-Pot repository and ran the installer
+3. Configured login credentials
+4. Post-install: SSH automatically moved to port **64295**
+5. Accessed Kibana web UI via browser on port **64297**
+6. All honeypot services exposed to the public internet — no firewall restrictions
 
 ---
 
@@ -18,14 +31,15 @@ T-Pot bundles multiple honeypot services (Cowrie, Dionaea, Sentrypeer, ConPot, a
 Public Internet
       │
       ▼
-AWS EC2 Instance (Ubuntu Server)
+Vultr Cloud Instance (Ubuntu 24.04)
       │
       ├── T-Pot (Multi-Honeypot Platform)
+      │     ├── Honeytrap     (Generic network honeypot)
       │     ├── Cowrie        (SSH/Telnet honeypot)
       │     ├── Dionaea       (Malware capture)
+      │     ├── Heralding     (Credential capture)
       │     ├── Sentrypeer    (VoIP honeypot)
       │     ├── ConPot        (ICS/SCADA honeypot)
-      │     ├── Honeytrap     (Generic network honeypot)
       │     └── ...more
       │
       ├── ELK Stack
@@ -37,79 +51,85 @@ AWS EC2 Instance (Ubuntu Server)
 
 ---
 
-## Setup
-
-### 1. AWS EC2 Instance
-- Launched an Ubuntu Server EC2 instance with sufficient RAM to run T-Pot's full stack
-- Generated an SSH key pair for secure remote access
-- Configured security groups:
-  - **Port 64295** — SSH access restricted to my IP only (T-Pot moves SSH here post-install)
-  - **Port 64297** — Web UI access restricted to my IP only
-  - **All other ports** (22, 80, 443, 25, 445, 3389, etc.) — open to the public internet for honeypot services to receive traffic
-
-### 2. Connecting via Kali Linux VM
-- Set up a Kali Linux VM locally
-- Connected to the EC2 instance via SSH using the generated key pair credentials
-
-### 3. T-Pot Installation
-- Cloned the T-Pot repository from GitHub
-- Ran the installer and completed setup
-- Post-install: SSH session was automatically moved to port 64295 as expected
-- Verified all honeypot services were running and accessible
-
-### 4. Accessing the Dashboard
-- Navigated to the Kibana web UI via `https://<EC2-IP>:64297`
-- Confirmed live attack data was being ingested into Elasticsearch
-- Explored pre-built T-Pot dashboards for real-time monitoring
-
----
-
 ## Results & Findings
 
-### Attack Volume (24-hour window)
-| Timeframe | Attacks |
-|-----------|---------|
-| Last 1 hour | 1,846 |
-| Last 24 hours | 58,466 |
-| Total (lifetime) | 60,000+ |
-
-### Top Honeypots Targeted
+### Attack Volume (30-day window)
 | Honeypot | Attacks |
 |----------|---------|
-| Honeytrap | 26k |
-| Cowrie (SSH) | 24k |
-| Dionaea | 3k |
-| Sentrypeer | 2k |
-| ConPot | 2k |
+| Total | 2,000,000+ |
+| Honeytrap | 1,000,000+ |
+| Cowrie (SSH) | 617k |
+| Dionaea | 227k |
+| Heralding | 119k |
+| Sentrypeer | 99k |
+| ConPot | 36k |
+
+### Top Attacking Organizations (ASN)
+| Organization | Attack Count |
+|-------------|-------------|
+| DigitalOcean, LLC | 487,379 |
+| Unmanaged Ltd | 109,704 |
+| W-NET TELECOM | 106,291 |
+| Alsycon B.V. | 102,211 |
+| OVH SAS | 79,244 |
+| Contabo GmbH | 47,950 |
+| Akamai Connected Cloud | 45,109 |
+
+The dominance of cloud providers like DigitalOcean and OVH confirms that attackers heavily rely on cheap VPS infrastructure to host automated attack bots, making it easy to rotate IPs and scale attacks.
 
 ### Top Attacking Countries
-- United States, France, Mexico, Romania, China, Netherlands, South Korea, Germany
+United States, Brazil, France, Romania, China, Netherlands, Canada, Bulgaria, Hong Kong
 
 ### Most Targeted Ports
-- Port 22 (SSH), 5060 (SIP/VoIP), 445 (SMB), 5901 (VNC), 10001
+- **5901-5903** — VNC (remote desktop)
+- **5060** — SIP/VoIP
+- **22** — SSH
+- **445** — SMB
+- **443** — HTTPS
 
-### Suricata IDS Alert Categories
-- Generic Protocol Command Activity
-- Miscellaneous Activity
-- Detection of a Network Scan
-- Attempted Administrator Privilege Gain
+### CVEs Being Actively Exploited
+| CVE | Count |
+|-----|-------|
+| CVE-2020-11900 | 24 |
+| CVE-2020-10173 | 18 |
+| CVE-2020-11910 | 7 |
+| CVE-2019-12263 | 6 |
+
+Real attackers were actively attempting to exploit known vulnerabilities years after their disclosure, confirming that unpatched systems remain a primary attack target in the wild.
+
+### Suricata IDS Top Alerts
+| Alert | Count |
+|-------|-------|
+| SURICATA IPv4 truncated packet | 639,744 |
+| SURICATA AF-PACKET truncated packet | 639,744 |
+| SURICATA STREAM Packet with broken ack | 435,611 |
+| ET SCAN Zmap User-Agent (Inbound) | 71,115 |
+| ET INFO SSH session in progress on Expected Port | 29,285 |
+
+The **71,115 Zmap scan detections** indicate large-scale automated internet-wide reconnaissance — Zmap is a tool used to scan the entire IPv4 address space in under an hour, confirming that public-facing infrastructure gets discovered and attacked almost immediately after going live.
 
 ### Attacker Credential Patterns
-Common usernames attempted: `root`, `admin`, `ubuntu`, `user`, `postgres`, `deploy`, `test`
+**Most common usernames attempted:** `root`, `admin`, `ubuntu`, `user`, `administrator`, `support`, `postgres`
 
-Common passwords attempted: `123456`, `password`, `admin`, `ubuntu`, `1234`, `(blank)`
+**Most common passwords attempted:** `123456`, `password`, `ubuntu`, `(blank)`, `admin`, `12345678`
 
-This confirms mass automated credential stuffing and brute force attacks targeting default/weak credentials on exposed SSH and other services.
+**Notable finding:** Credentials including `solana`, `firedancer`, `validator`, and `345gs5662d34` appeared prominently in both username and password tag clouds. These are associated with Solana blockchain validator node infrastructure, indicating a targeted campaign specifically hunting for cryptocurrency validator nodes to compromise and steal from — not just generic brute force activity.
 
 ---
 
 ## Key Takeaways
 
-- **Attackers are immediate.** Within minutes of the instance going public, attack attempts began — highlighting how continuously the internet is scanned.
-- **Credential stuffing is rampant.** The most common attack pattern was automated brute force attempts using default and common credentials.
-- **SSH (port 22) is a primary target.** Cowrie captured tens of thousands of SSH login attempts, confirming it remains one of the most attacked services on the internet.
-- **Geographic distribution is global.** Attacks originated from over 10 countries simultaneously, with no single dominant source.
-- **IDS complements honeypots.** Suricata's categorization added a layer of context beyond raw logs, helping distinguish between scan activity, brute force, and more targeted behavior.
+- **The internet is constantly being scanned.** Within minutes of the server going live, attack attempts began. There is no such thing as security through obscurity for public-facing infrastructure.
+
+- **Most attacks are fully automated.** The dominance of Linux-based attacking systems, cloud provider ASNs, and tools like Zmap confirms that the vast majority of attacks are bots and scripts, not humans manually targeting systems.
+
+- **Attackers actively exploit known CVEs years after disclosure.** Seeing CVEs from 2019 and 2020 still being actively exploited in 2026 reinforces why patch management is a critical security function.
+
+- **Credential stuffing targets default and common credentials.** The most attempted usernames and passwords are default system credentials, confirming that systems with weak or default passwords are compromised rapidly.
+
+- **Targeted campaigns exist within the noise.** The presence of Solana validator credentials in the attack data shows that beyond generic brute force, specific threat actors are running targeted campaigns against niche infrastructure like cryptocurrency nodes.
+
+- **Threat intelligence comes from real data.** Analyzing attack patterns, geographic origins, ASN data, and credential patterns provides actionable intelligence that can inform defensive security decisions.
 
 ---
 
@@ -117,27 +137,27 @@ This confirms mass automated credential stuffing and brute force attacks targeti
 
 | Tool | Purpose |
 |------|---------|
-| AWS EC2 | Cloud infrastructure |
-| Ubuntu Server | Host OS |
+| Vultr | Cloud infrastructure |
+| Ubuntu 24.04 LTS | Host OS |
 | T-Pot | Multi-honeypot platform |
 | Cowrie | SSH/Telnet honeypot |
 | Dionaea | Malware capture honeypot |
+| Heralding | Credential capture honeypot |
+| Honeytrap | Generic network honeypot |
 | Elasticsearch | Log storage and indexing |
 | Kibana | Dashboard and visualization |
 | Suricata | Intrusion detection system |
-| Kali Linux | Remote SSH client |
 
 ---
 
 ## Screenshots
+> <img width="1914" height="775" alt="image" src="https://github.com/user-attachments/assets/71202721-5333-4eed-90b0-da1ba3f079e9" />
 
-> *Attack Map — Live feed showing global attack origins*
+> <img width="1914" height="763" alt="image" src="https://github.com/user-attachments/assets/5eecd19e-090b-4180-8107-7c76b43bf446" />
 
-> *Kibana Dashboard — 60k+ attacks across all honeypot services*
+> <img width="1918" height="403" alt="image" src="https://github.com/user-attachments/assets/568ac6f0-3d44-4d68-b87d-4437705bfe0d" />
 
-> *Attack Analytics — Port histogram, country breakdown, OS fingerprinting*
-
-> *Credential Analysis — Username and password tag clouds from brute force attempts*
+> <img width="1914" height="944" alt="image" src="https://github.com/user-attachments/assets/775159c5-3fba-4f98-a91e-0634b557ea91" />
 
 ---
 
