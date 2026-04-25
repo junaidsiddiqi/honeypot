@@ -69,7 +69,6 @@ T-Pot runs each honeypot service in its own isolated Docker container, allowing 
 **Elasticsearch + Kibana (ELK Stack)** — All logs from every honeypot service get stored in Elasticsearch and visualized through Kibana dashboards, making it easy to see attack trends, geographic origins, and credential patterns in real time.
 
 **Suricata IDS** — Monitors all incoming network traffic at the packet level and categorizes what type of activity it sees — port scans, malformed packets, and known attack tool signatures. While the honeypot services log what attackers try to do, Suricata logs how they're doing it at the network level.
----
 
 ---
 
