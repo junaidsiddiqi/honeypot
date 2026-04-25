@@ -69,7 +69,6 @@ T-Pot runs each honeypot service in its own isolated Docker container, allowing 
 **Elasticsearch + Kibana (ELK Stack)** — All logs from every honeypot service get stored in Elasticsearch and visualized through Kibana dashboards, making it easy to see attack trends, geographic origins, and credential patterns in real time.
 
 **Suricata IDS** — Monitors all incoming network traffic at the packet level and categorizes what type of activity it sees — port scans, malformed packets, and known attack tool signatures. While the honeypot services log what attackers try to do, Suricata logs how they're doing it at the network level.
-
 ---
 
 ---
@@ -96,8 +95,8 @@ The username and password tag clouds were interesting to look at. The most commo
 
 This made it clear that attackers aren't trying complex or targeted credentials — they're just spraying common defaults hoping someone left their server unsecured.
 
-### Suricata IDS Alerts
-Suricata was categorizing incoming traffic in real time. The most common alert types were related to malformed packets and network scanning activity, which confirmed that a lot of the traffic was automated tools probing the server rather than human attackers.
+### How Quickly Attacks Started
+Within minutes of the server going live it was already receiving probes. By the end of the first day there were already thousands of attempts logged — which showed me that internet-facing infrastructure has essentially zero grace period before it gets discovered.
 
 ---
 
@@ -111,7 +110,7 @@ Suricata was categorizing incoming traffic in real time. The most common alert t
 
 - **A honeypot gives you a window into real attacker behavior.** Instead of reading about how attackers operate in a textbook, I got to see it directly in the data — what they target, how they probe, and what they're looking for.
 
-- **Cloud infrastructure requires intentional security decisions.** Deploying something to the cloud without thinking about exposure is a risk — this project made that very concrete.
+- **Deception is a legitimate security strategy.** By making attackers think they found a real vulnerable system, a honeypot wastes their time and resources while gathering intelligence on their methods.
 
 ---
 
