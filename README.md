@@ -1,14 +1,14 @@
 # Cloud Honeypot — T-Pot on Vultr
 
-A public-facing honeypot deployed on a cloud server and exposed to the open internet to capture and analyze real-world cyberattacks. Over 30 days of operation, the honeypot recorded **2 million+ attack attempts** from threat actors across the globe, providing hands-on exposure to real attacker tactics, techniques, and procedures (TTPs).
+A public-facing honeypot deployed on a cloud server and left exposed to the open internet for 30 days to capture and observe real-world cyberattacks. Over the course of the month, the honeypot recorded **2 million+ attack attempts** from threat actors across the globe.
 
 ---
 
 ## Overview
 
-This project involved deploying T-Pot — a multi-honeypot platform — on a cloud-based Ubuntu server with no firewall restrictions, intentionally exposed to the public internet. The goal was to observe how attackers behave in the wild: what credentials they try, what ports they target, what tools they use, what vulnerabilities they exploit, and where they originate from.
+This project involved deploying T-Pot — a multi-honeypot platform — on a cloud-based Ubuntu server intentionally exposed to the public internet with no restrictions. The goal was simple: see what happens when you put a server on the internet and leave it open.
 
-T-Pot bundles multiple honeypot services alongside an ELK stack (Elasticsearch + Kibana) for real-time log ingestion and visualization, as well as Suricata IDS for intrusion detection and alert categorization.
+T-Pot bundles multiple honeypot services that simulate vulnerable systems, alongside an ELK stack (Elasticsearch + Kibana) for real-time visualization and Suricata IDS for intrusion detection.
 
 > <img width="1916" height="943" alt="image" src="https://github.com/user-attachments/assets/60339425-f5f7-41da-9021-4972724ba9ae" />
 
@@ -21,7 +21,7 @@ T-Pot bundles multiple honeypot services alongside an ELK stack (Elasticsearch +
 3. Configured login credentials
 4. Post-install: SSH automatically moved to port **64295**
 5. Accessed Kibana web UI via browser on port **64297**
-6. All honeypot services exposed to the public internet — no firewall restrictions
+6. Left all honeypot services exposed to the public internet for 30 days
 
 ---
 
@@ -51,85 +51,44 @@ Vultr Cloud Instance (Ubuntu 24.04)
 
 ---
 
-## Results & Findings
+## What I Observed
 
 ### Attack Volume (30-day window)
+The volume of attacks was the first thing that stood out. Within minutes of the server going live it was already receiving attack attempts — I didn't expect it to happen that fast.
+
 | Honeypot | Attacks |
 |----------|---------|
 | Total | 2,000,000+ |
 | Honeytrap | 1,000,000+ |
-| Cowrie (SSH) | 617k |
+| Cowrie (SSH) | 616k |
 | Dionaea | 227k |
 | Heralding | 119k |
 | Sentrypeer | 99k |
-| ConPot | 36k |
 
-### Top Attacking Organizations (ASN)
-| Organization | Attack Count |
-|-------------|-------------|
-| DigitalOcean, LLC | 487,379 |
-| Unmanaged Ltd | 109,704 |
-| W-NET TELECOM | 106,291 |
-| Alsycon B.V. | 102,211 |
-| OVH SAS | 79,244 |
-| Contabo GmbH | 47,950 |
-| Akamai Connected Cloud | 45,109 |
+### Where Attacks Came From
+Looking at the attack map and country breakdown, attacks were coming in from all over the world simultaneously — United States, Brazil, France, Romania, China, Netherlands and more. There was no single dominant source, which suggested to me that most of this was automated and not targeted at me specifically.
 
-The dominance of cloud providers like DigitalOcean and OVH confirms that attackers heavily rely on cheap VPS infrastructure to host automated attack bots, making it easy to rotate IPs and scale attacks.
+### What Credentials Were Being Tried
+The username and password tag clouds were interesting to look at. The most common usernames were things like `root`, `admin`, `ubuntu`, and `administrator` — all default credentials you'd find on a freshly deployed Linux server. The passwords were just as predictable: `123456`, `password`, `admin`, and even blank passwords.
 
-### Top Attacking Countries
-United States, Brazil, France, Romania, China, Netherlands, Canada, Bulgaria, Hong Kong
+This made it clear that attackers aren't trying complex or targeted credentials — they're just spraying common defaults hoping someone left their server unsecured.
 
-### Most Targeted Ports
-- **5901-5903** — VNC (remote desktop)
-- **5060** — SIP/VoIP
-- **22** — SSH
-- **445** — SMB
-- **443** — HTTPS
-
-### CVEs Being Actively Exploited
-| CVE | Count |
-|-----|-------|
-| CVE-2020-11900 | 24 |
-| CVE-2020-10173 | 18 |
-| CVE-2020-11910 | 7 |
-| CVE-2019-12263 | 6 |
-
-Real attackers were actively attempting to exploit known vulnerabilities years after their disclosure, confirming that unpatched systems remain a primary attack target in the wild.
-
-### Suricata IDS Top Alerts
-| Alert | Count |
-|-------|-------|
-| SURICATA IPv4 truncated packet | 639,744 |
-| SURICATA AF-PACKET truncated packet | 639,744 |
-| SURICATA STREAM Packet with broken ack | 435,611 |
-| ET SCAN Zmap User-Agent (Inbound) | 71,115 |
-| ET INFO SSH session in progress on Expected Port | 29,285 |
-
-The **71,115 Zmap scan detections** indicate large-scale automated internet-wide reconnaissance — Zmap is a tool used to scan the entire IPv4 address space in under an hour, confirming that public-facing infrastructure gets discovered and attacked almost immediately after going live.
-
-### Attacker Credential Patterns
-**Most common usernames attempted:** `root`, `admin`, `ubuntu`, `user`, `administrator`, `support`, `postgres`
-
-**Most common passwords attempted:** `123456`, `password`, `ubuntu`, `(blank)`, `admin`, `12345678`
-
-**Notable finding:** Credentials including `solana`, `firedancer`, `validator`, and `345gs5662d34` appeared prominently in both username and password tag clouds. These are associated with Solana blockchain validator node infrastructure, indicating a targeted campaign specifically hunting for cryptocurrency validator nodes to compromise and steal from — not just generic brute force activity.
+### Suricata IDS Alerts
+Suricata was categorizing incoming traffic in real time. The most common alert types were related to malformed packets and network scanning activity, which confirmed that a lot of the traffic was automated tools probing the server rather than human attackers.
 
 ---
 
-## Key Takeaways
+## What I Learned
 
-- **The internet is constantly being scanned.** Within minutes of the server going live, attack attempts began. There is no such thing as security through obscurity for public-facing infrastructure.
+- **Servers get attacked immediately.** The moment a server is public-facing, it starts receiving probes and attack attempts. Security can't be an afterthought.
 
-- **Most attacks are fully automated.** The dominance of Linux-based attacking systems, cloud provider ASNs, and tools like Zmap confirms that the vast majority of attacks are bots and scripts, not humans manually targeting systems.
+- **Most attacks are automated.** The geographic spread, the volume, and the credential patterns all point to bots and scripts — not people sitting at computers manually trying to break in.
 
-- **Attackers actively exploit known CVEs years after disclosure.** Seeing CVEs from 2019 and 2020 still being actively exploited in 2026 reinforces why patch management is a critical security function.
+- **Default credentials are a real problem.** Seeing `root`, `admin`, and blank passwords constantly being tried showed me why default credentials need to be changed immediately on any new system.
 
-- **Credential stuffing targets default and common credentials.** The most attempted usernames and passwords are default system credentials, confirming that systems with weak or default passwords are compromised rapidly.
+- **A honeypot gives you a window into real attacker behavior.** Instead of reading about how attackers operate in a textbook, I got to see it directly in the data — what they target, how they probe, and what they're looking for.
 
-- **Targeted campaigns exist within the noise.** The presence of Solana validator credentials in the attack data shows that beyond generic brute force, specific threat actors are running targeted campaigns against niche infrastructure like cryptocurrency nodes.
-
-- **Threat intelligence comes from real data.** Analyzing attack patterns, geographic origins, ASN data, and credential patterns provides actionable intelligence that can inform defensive security decisions.
+- **Cloud infrastructure requires intentional security decisions.** Deploying something to the cloud without thinking about exposure is a risk — this project made that very concrete.
 
 ---
 
@@ -163,4 +122,4 @@ The **71,115 Zmap scan detections** indicate large-scale automated internet-wide
 
 ## Disclaimer
 
-This honeypot was deployed in an isolated cloud environment for educational and research purposes only. No production systems or user data were at risk. All captured data was used solely for threat analysis and learning.
+This honeypot was deployed in an isolated cloud environment for educational and research purposes only. No production systems or user data were at risk. All captured data was used solely for learning.
