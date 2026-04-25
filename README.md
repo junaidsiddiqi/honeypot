@@ -48,6 +48,29 @@ Vultr Cloud Instance (Ubuntu 24.04)
       │
       └── Suricata IDS        (Intrusion detection & alerting)
 ```
+---
+
+## How It Works
+
+T-Pot runs each honeypot service in its own isolated Docker container, allowing multiple fake vulnerable systems to run simultaneously on one server without conflicting with each other. Here's what each component does:
+
+**Honeytrap** — A generic honeypot that listens on a wide range of ports and logs anything that connects to them. Designed to catch broad automated scanning activity.
+
+**Cowrie** — Simulates an SSH and Telnet server. When attackers try to brute force their way in, Cowrie lets them "log in" with any credentials and records everything they type and every command they run, giving a window into exactly what attackers do once they think they have access.
+
+**Dionaea** — Simulates vulnerable services like SMB and FTP commonly exploited by malware. It captures malware samples that attackers attempt to deploy.
+
+**Heralding** — A credential harvesting honeypot that accepts logins across multiple protocols and logs every username and password combination attempted.
+
+**Sentrypeer** — A VoIP honeypot that captures SIP scanning and fraud attempts targeting phone systems.
+
+**ConPot** — Simulates industrial control systems to attract attackers targeting critical infrastructure.
+
+**Elasticsearch + Kibana (ELK Stack)** — All logs from every honeypot service get stored in Elasticsearch and visualized through Kibana dashboards, making it easy to see attack trends, geographic origins, and credential patterns in real time.
+
+**Suricata IDS** — Monitors all incoming network traffic at the packet level and categorizes what type of activity it sees — port scans, malformed packets, and known attack tool signatures. While the honeypot services log what attackers try to do, Suricata logs how they're doing it at the network level.
+
+---
 
 ---
 
